@@ -1,6 +1,6 @@
 'use strict';
 
-const { flattenTikHubResponse } = require('../../lib/flatten');
+const { flattenTikHubResponse } = require('../../lib/flatten.cjs');
 
 const TIKHUB_ENDPOINT =
   'https://api.tikhub.io/api/v1/douyin/search/fetch_general_search_v2';

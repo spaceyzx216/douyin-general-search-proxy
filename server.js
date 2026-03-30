@@ -2,7 +2,7 @@
 
 const http = require('http');
 const { URL } = require('url');
-const { flattenTikHubResponse } = require('./lib/flatten');
+const { flattenTikHubResponse } = require('./lib/flatten.cjs');
 
 const PORT = Number(process.env.PORT || 8787);
 const TIKHUB_API_TOKEN = process.env.TIKHUB_API_TOKEN || '';

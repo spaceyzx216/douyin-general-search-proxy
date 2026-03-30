@@ -1,4 +1,5 @@
 .env
 .env.local
 .vercel
+.wrangler
 node_modules

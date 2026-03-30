@@ -7,10 +7,14 @@
 - `server.js`：本地 Node HTTP 服务版本
 - `api/douyin/general-search.js`：Vercel Serverless Function 入口
 - `api/health.js`：Vercel 健康检查接口
-- `lib/flatten.js`：响应扁平化逻辑
+- `lib/flatten.cjs`：Node/Vercel 版本的响应扁平化逻辑
+- `lib/flatten.js`：Cloudflare Workers 版本的响应扁平化逻辑
+- `src/index.js`：Cloudflare Workers 入口
+- `wrangler.jsonc`：Cloudflare Workers 配置
 - `openapi.yaml`：本地服务版 OpenAPI
 - `openapi.vercel.yaml`：Vercel 部署版 OpenAPI
 - `openapi.vercel.template.yaml`：可复用的生产版 OpenAPI 模板
+- `openapi.cloudflare.template.yaml`：Cloudflare Workers 版 OpenAPI 模板
 - `vercel.json`：Vercel 配置
 - `.gitignore`：Git 忽略配置
 - `DEPLOY_CHECKLIST.md`：部署检查清单
@@ -113,3 +117,39 @@ __VERCEL_BASE_URL__
 本地调试时，导入 [openapi.yaml](/Users/ypc/Desktop/coze原生插件开发/douyin-general-search/proxy/openapi.yaml)。
 
 真正上架或给别人使用时，导入 [openapi.vercel.yaml](/Users/ypc/Desktop/coze原生插件开发/douyin-general-search/proxy/openapi.vercel.yaml)，而不是直接导入第三方 TikHub 接口文档。
+
+## Cloudflare Workers 部署步骤
+
+1. 登录 Cloudflare
+
+```bash
+npx wrangler login
+```
+
+2. 配置密钥
+
+```bash
+npx wrangler secret put TIKHUB_API_TOKEN
+```
+
+3. 部署 Workers
+
+```bash
+npx wrangler deploy
+```
+
+4. 部署完成后，你会拿到一个 Workers 域名，例如：
+
+```bash
+https://douyin-general-search-proxy.<subdomain>.workers.dev
+```
+
+5. 打开 [openapi.cloudflare.template.yaml](/Users/ypc/Desktop/coze原生插件开发/douyin-general-search/proxy/openapi.cloudflare.template.yaml)，把：
+
+```yaml
+__CLOUDFLARE_WORKER_BASE_URL__
+```
+
+替换成你的真实 Workers 域名
+
+6. 在 Coze 中导入替换后的 OpenAPI
