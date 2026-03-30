@@ -8,7 +8,7 @@ const PORT = Number(process.env.PORT || 8787);
 const TIKHUB_API_TOKEN = process.env.TIKHUB_API_TOKEN || '';
 const TIKHUB_ENDPOINT =
   'https://api.tikhub.io/api/v1/douyin/search/fetch_general_search_v2';
-const UPSTREAM_TIMEOUT_MS = 20000;
+const UPSTREAM_TIMEOUT_MS = 8000;
 
 function sendJson(res, statusCode, payload) {
   const body = JSON.stringify(payload, null, 2);

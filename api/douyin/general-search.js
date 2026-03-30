@@ -4,7 +4,7 @@ const { flattenTikHubResponse } = require('../../lib/flatten');
 
 const TIKHUB_ENDPOINT =
   'https://api.tikhub.io/api/v1/douyin/search/fetch_general_search_v2';
-const UPSTREAM_TIMEOUT_MS = 20000;
+const UPSTREAM_TIMEOUT_MS = 8000;
 
 function send(res, status, payload) {
   res.status(status).json(payload);
