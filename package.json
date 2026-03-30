@@ -1,0 +1,10 @@
+{
+  "name": "douyin-general-search-proxy",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Proxy API for flattening TikHub Douyin general search responses for Coze.",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  }
+}

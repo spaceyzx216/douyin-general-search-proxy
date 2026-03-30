@@ -1,0 +1,228 @@
+openapi: 3.0.1
+info:
+  title: Douyin General Search Proxy
+  version: v1.0.0
+  description: >-
+    部署在 Vercel 上的抖音综合搜索中转 API。
+    它会调用 TikHub 接口，并将复杂嵌套响应整理成更适合 Coze 使用的扁平字段。
+
+servers:
+  - url: __VERCEL_BASE_URL__
+    description: Vercel Production
+
+paths:
+  /api/douyin/general-search:
+    post:
+      operationId: fetchDouyinGeneralSearch
+      summary: 获取抖音综合搜索结果
+      description: >-
+        根据关键词搜索抖音综合搜索结果，并返回扁平化后的 items 列表。
+        首次请求时 cursor 传 0，search_id 和 backtrace 传空字符串。
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/GeneralSearchRequest'
+      responses:
+        '200':
+          description: 请求成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GeneralSearchFlatResponse'
+        '400':
+          description: 请求参数错误
+        '500':
+          description: 代理服务配置错误
+        '502':
+          description: 上游 TikHub 接口异常
+
+components:
+  schemas:
+    GeneralSearchRequest:
+      type: object
+      required:
+        - keyword
+      properties:
+        keyword:
+          type: string
+          description: 搜索关键词
+          default: 猫咪
+        cursor:
+          type: integer
+          description: 翻页游标
+          default: 0
+        sort_type:
+          type: string
+          description: 排序方式。0=综合排序，1=最多点赞，2=最新发布
+          enum: ['0', '1', '2']
+          default: '0'
+        publish_time:
+          type: string
+          description: 发布时间筛选。0=不限，1=最近一天，7=最近一周，180=最近半年
+          enum: ['0', '1', '7', '180']
+          default: '0'
+        filter_duration:
+          type: string
+          description: 视频时长筛选。0=不限，0-1=1分钟以内，1-5=1到5分钟，5-10000=5分钟以上
+          enum: ['0', '0-1', '1-5', '5-10000']
+          default: '0'
+        content_type:
+          type: string
+          description: 内容类型。0=不限，1=视频，2=图片，3=文章
+          enum: ['0', '1', '2', '3']
+          default: '0'
+        search_id:
+          type: string
+          description: 搜索 ID
+          default: ''
+        backtrace:
+          type: string
+          description: 回溯标识
+          default: ''
+
+    GeneralSearchFlatResponse:
+      type: object
+      properties:
+        code:
+          type: integer
+        message:
+          type: string
+        message_zh:
+          type: string
+        request_id:
+          type: string
+        router:
+          type: string
+        time:
+          type: string
+        time_stamp:
+          type: integer
+        time_zone:
+          type: string
+        docs:
+          type: string
+        cache_url:
+          type: string
+        cache_message:
+          type: string
+        cache_message_zh:
+          type: string
+        support:
+          type: string
+        cursor:
+          type: integer
+        search_id:
+          type: string
+        backtrace:
+          type: string
+        has_more:
+          type: integer
+        keyword:
+          type: string
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/FlatSearchItem'
+        raw_meta:
+          type: object
+          properties:
+            business_data_count:
+              type: integer
+
+    FlatSearchItem:
+      type: object
+      properties:
+        type:
+          type: integer
+        aweme_id:
+          type: string
+        desc:
+          type: string
+        author_uid:
+          type: string
+        author_nickname:
+          type: string
+        author_is_verified:
+          type: boolean
+        author_region:
+          type: string
+        author_avatar_thumb_urls:
+          type: array
+          items:
+            type: string
+        author_avatar_medium_urls:
+          type: array
+          items:
+            type: string
+        author_avatar_larger_urls:
+          type: array
+          items:
+            type: string
+        music_id:
+          type: string
+        music_title:
+          type: string
+        music_author:
+          type: string
+        music_play_urls:
+          type: array
+          items:
+            type: string
+        cha_names:
+          type: array
+          items:
+            type: string
+        cha_share_urls:
+          type: array
+          items:
+            type: string
+        video_play_urls:
+          type: array
+          items:
+            type: string
+        video_cover_urls:
+          type: array
+          items:
+            type: string
+        video_dynamic_cover_urls:
+          type: array
+          items:
+            type: string
+        video_origin_cover_urls:
+          type: array
+          items:
+            type: string
+        video_download_urls:
+          type: array
+          items:
+            type: string
+        video_width:
+          type: integer
+        video_height:
+          type: integer
+        video_ratio:
+          type: string
+        video_duration:
+          type: integer
+        comment_count:
+          type: integer
+        digg_count:
+          type: integer
+        share_count:
+          type: integer
+        play_count:
+          type: integer
+        collect_count:
+          type: integer
+        is_delete:
+          type: boolean
+        is_private:
+          type: boolean
+        allow_share:
+          type: boolean
+        allow_comment:
+          type: boolean
+        share_url:
+          type: string
