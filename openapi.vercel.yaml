@@ -6,7 +6,7 @@ info:
     Vercel 部署版中转 API：调用 TikHub 抖音综合搜索接口，并将复杂嵌套响应扁平化为更适合 Coze 使用的 items 列表。
 
 servers:
-  - url: https://your-vercel-domain.vercel.app
+  - url: https://douyin-general-search-proxy.vercel.app
     description: Vercel Production
 
 paths:

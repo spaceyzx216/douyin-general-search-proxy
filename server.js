@@ -8,6 +8,7 @@ const PORT = Number(process.env.PORT || 8787);
 const TIKHUB_API_TOKEN = process.env.TIKHUB_API_TOKEN || '';
 const TIKHUB_ENDPOINT =
   'https://api.tikhub.io/api/v1/douyin/search/fetch_general_search_v2';
+const UPSTREAM_TIMEOUT_MS = 20000;
 
 function sendJson(res, statusCode, payload) {
   const body = JSON.stringify(payload, null, 2);
@@ -47,10 +48,22 @@ function parseJsonBody(req) {
   });
 }
 
+function getBearerToken(req) {
+  const authHeader = req.headers.authorization || '';
+  if (typeof authHeader === 'string' && authHeader.startsWith('Bearer ')) {
+    return authHeader.slice('Bearer '.length).trim();
+  }
+
+  return TIKHUB_API_TOKEN;
+}
+
 async function handleSearch(req, res) {
-  if (!TIKHUB_API_TOKEN) {
+  const token = getBearerToken(req);
+
+  if (!token) {
     sendJson(res, 500, {
-      error: 'Missing TIKHUB_API_TOKEN environment variable.'
+      error:
+        'Missing TikHub token. Provide Authorization: Bearer <token> or set TIKHUB_API_TOKEN.'
     });
     return;
   }
@@ -80,22 +93,30 @@ async function handleSearch(req, res) {
   }
 
   let upstreamResponse;
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), UPSTREAM_TIMEOUT_MS);
   try {
     upstreamResponse = await fetch(TIKHUB_ENDPOINT, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        Authorization: `Bearer ${TIKHUB_API_TOKEN}`
+        Authorization: `Bearer ${token}`
       },
-      body: JSON.stringify(payload)
+      body: JSON.stringify(payload),
+      signal: controller.signal
     });
   } catch (error) {
+    clearTimeout(timeout);
     sendJson(res, 502, {
-      error: 'Failed to reach TikHub upstream API.',
+      error:
+        error.name === 'AbortError'
+          ? 'TikHub upstream API timed out.'
+          : 'Failed to reach TikHub upstream API.',
       detail: error.message
     });
     return;
   }
+  clearTimeout(timeout);
 
   let upstreamJson;
   try {

@@ -4,9 +4,21 @@ const { flattenTikHubResponse } = require('../../lib/flatten');
 
 const TIKHUB_ENDPOINT =
   'https://api.tikhub.io/api/v1/douyin/search/fetch_general_search_v2';
+const UPSTREAM_TIMEOUT_MS = 20000;
 
 function send(res, status, payload) {
   res.status(status).json(payload);
+}
+
+function getBearerToken(req) {
+  const authHeader =
+    req.headers.authorization || req.headers.Authorization || '';
+
+  if (typeof authHeader === 'string' && authHeader.startsWith('Bearer ')) {
+    return authHeader.slice('Bearer '.length).trim();
+  }
+
+  return process.env.TIKHUB_API_TOKEN || '';
 }
 
 module.exports = async function handler(req, res) {
@@ -16,9 +28,12 @@ module.exports = async function handler(req, res) {
     return;
   }
 
-  const token = process.env.TIKHUB_API_TOKEN || '';
+  const token = getBearerToken(req);
   if (!token) {
-    send(res, 500, { error: 'Missing TIKHUB_API_TOKEN environment variable.' });
+    send(res, 500, {
+      error:
+        'Missing TikHub token. Provide Authorization: Bearer <token> or set TIKHUB_API_TOKEN.'
+    });
     return;
   }
 
@@ -44,6 +59,9 @@ module.exports = async function handler(req, res) {
   }
 
   let upstreamResponse;
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), UPSTREAM_TIMEOUT_MS);
+
   try {
     upstreamResponse = await fetch(TIKHUB_ENDPOINT, {
       method: 'POST',
@@ -51,15 +69,21 @@ module.exports = async function handler(req, res) {
         'Content-Type': 'application/json',
         Authorization: `Bearer ${token}`
       },
-      body: JSON.stringify(payload)
+      body: JSON.stringify(payload),
+      signal: controller.signal
     });
   } catch (error) {
+    clearTimeout(timeout);
     send(res, 502, {
-      error: 'Failed to reach TikHub upstream API.',
+      error:
+        error.name === 'AbortError'
+          ? 'TikHub upstream API timed out.'
+          : 'Failed to reach TikHub upstream API.',
       detail: error.message
     });
     return;
   }
+  clearTimeout(timeout);
 
   let upstreamJson;
   try {
